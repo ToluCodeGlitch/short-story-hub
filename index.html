@@ -6,29 +6,163 @@
   <title>Short Story Hub</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
+      font-family: 'Georgia', serif;
+      background: #fefefe;
       margin: 0;
-      padding: 2rem;
+      padding: 0;
+      color: #222;
     }
-    h1 {
+
+    header {
       text-align: center;
+      padding: 3rem 1rem 1rem;
+      background: #f4f4f4;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 2.5rem;
+    }
+
+    p.tagline {
+      margin-top: 0.5rem;
+      font-style: italic;
+      color: #666;
+    }
+
+    main {
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    form {
+      margin-bottom: 2rem;
+      background: #fff;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border-left: 4px solid #444;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 0.7rem;
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      font-family: 'Georgia', serif;
+      font-size: 1rem;
+    }
+
+    button {
+      background: #333;
+      color: white;
+      padding: 0.7rem 1.2rem;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .story {
+      background: #fff;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      border-left: 4px solid #333;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      position: relative;
+    }
+
+    .story h2 {
+      margin-top: 0;
+      font-size: 1.5rem;
       color: #333;
     }
-    .story {
-      background: white;
-      padding: 1rem;
-      margin: 1rem auto;
-      max-width: 600px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+    .story p {
+      line-height: 1.6;
+    }
+
+    .delete-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      font-size: 0.9rem;
+      color: #aaa;
     }
   </style>
 </head>
 <body>
-  <h1>Short Story Hub</h1>
-  <div class="story">
-    <h2>First Light</h2>
-    <p>She woke up to the sound of silence. The world had ended, but the birds didn’t know it.</p>
-  </div>
+  <header>
+    <h1>Short Story Hub</h1>
+    <p class="tagline">Fiction. Truth. Everything in between.</p>
+  </header>
+
+  <main>
+    <form id="storyForm">
+      <label for="title">Story Title</label>
+      <input type="text" id="title" name="title" required placeholder="e.g. A Night in Lagos" />
+
+      <label for="content">Story</label>
+      <textarea id="content" name="content" rows="6" required placeholder="Write your story here..."></textarea>
+
+      <button type="submit">Submit Story</button>
+    </form>
+
+    <div id="storyList">
+      <!-- Stories will appear here -->
+    </div>
+  </main>
+
+  <footer>
+    &copy; 2025 Short Story Hub — Made with words.
+  </footer>
+
+  <script>
+    const form = document.getElementById('storyForm');
+    const storyList = document.getElementById('storyList');
+
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const title = document.getElementById('title').value;
+      const content = document.getElementById('content').value;
+
+      const storyDiv = document.createElement('div');
+      storyDiv.className = 'story';
+
+      const storyTitle = document.createElement('h2');
+      storyTitle.textContent = title;
+
+      const storyContent = document.createElement('p');
+      storyContent.textContent = content;
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.className = 'delete-btn';
+      deleteBtn.addEventListener('click', () => {
+        storyList.removeChild(storyDiv);
+      });
+
+      storyDiv.appendChild(deleteBtn);
+      storyDiv.appendChild(storyTitle);
+      storyDiv.appendChild(storyContent);
+
+      storyList.prepend(storyDiv);
+      form.reset();
+    });
+  </script>
 </body>
 </html>
