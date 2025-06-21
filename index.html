@@ -1,104 +1,98 @@
-
-      <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Short Story Hub</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
+      font-family: 'Georgia', serif;
+      background: #fefefe;
       margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f8f4f0;
-      color: #333;
-      line-height: 1.6;
+      padding: 0;
+      color: #222;
     }
 
     header {
-      background-color: #fff;
-      padding: 2.5rem 1rem 1rem;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
       text-align: center;
+      padding: 3rem 1rem 1rem;
+      background: #f4f4f4;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
 
-    header h1 {
+    h1 {
       margin: 0;
       font-size: 2.5rem;
-      color: #2e2e2e;
     }
 
-    .tagline {
-      font-style: italic;
-      color: #777;
+    p.tagline {
       margin-top: 0.5rem;
+      font-style: italic;
+      color: #666;
     }
 
     main {
-      max-width: 800px;
+      max-width: 700px;
       margin: 2rem auto;
       padding: 0 1rem;
     }
 
     form {
-      background: #ffffff;
-      padding: 1.5rem;
-      border-left: 5px solid #222;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
       margin-bottom: 2rem;
-      border-radius: 5px;
-    }
-
-    label {
-      display: block;
-      font-weight: bold;
-      margin-top: 1rem;
+      background: #fff;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border-left: 4px solid #444;
     }
 
     input[type="text"],
     textarea {
       width: 100%;
-      padding: 0.8rem;
-      margin-top: 0.3rem;
+      padding: 0.7rem;
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
       border: 1px solid #ccc;
-      border-radius: 4px;
+      font-family: 'Georgia', serif;
       font-size: 1rem;
-      background: #fafafa;
     }
 
     button {
-      margin-top: 1rem;
-      background: #222;
-      color: #fff;
+      background: #333;
+      color: white;
+      padding: 0.7rem 1.2rem;
       border: none;
-      padding: 0.8rem 1.5rem;
       font-size: 1rem;
-      border-radius: 4px;
       cursor: pointer;
     }
 
     .story {
       background: #fff;
-      padding: 1.2rem 1rem;
-      margin-bottom: 1.5rem;
-      border-left: 5px solid #444;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      border-left: 4px solid #333;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      border-radius: 4px;
+      position: relative;
     }
 
     .story h2 {
       margin-top: 0;
-      margin-bottom: 0.5rem;
-      font-size: 1.4rem;
-      color: #222;
+      font-size: 1.5rem;
+      color: #333;
     }
 
     .story p {
-      margin: 0.5rem 0 0;
-      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+
+    .delete-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #cc0000;
+      color: white;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
     }
 
     footer {
@@ -106,16 +100,6 @@
       padding: 2rem 1rem;
       font-size: 0.9rem;
       color: #aaa;
-    }
-
-    @media (max-width: 600px) {
-      header h1 {
-        font-size: 2rem;
-      }
-
-      form, .story {
-        padding: 1rem;
-      }
     }
   </style>
 </head>
@@ -149,14 +133,25 @@
     const form = document.getElementById('storyForm');
     const storyList = document.getElementById('storyList');
 
-    form.addEventListener('submit', function(event) {
+    // Load saved stories on page load
+    window.onload = function () {
+      const savedStories = JSON.parse(localStorage.getItem('stories')) || [];
+      savedStories.forEach(story => addStoryToPage(story.title, story.content));
+    };
+
+    form.addEventListener('submit', function (event) {
       event.preventDefault();
 
-      const title = document.getElementById('title').value.trim();
-      const content = document.getElementById('content').value.trim();
+      const title = document.getElementById('title').value;
+      const content = document.getElementById('content').value;
 
-      if (!title || !content) return;
+      addStoryToPage(title, content);
+      saveStory(title, content);
 
+      form.reset();
+    });
+
+    function addStoryToPage(title, content) {
       const storyDiv = document.createElement('div');
       storyDiv.className = 'story';
 
@@ -166,12 +161,35 @@
       const storyContent = document.createElement('p');
       storyContent.textContent = content;
 
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-btn';
+      deleteBtn.textContent = 'Delete';
+
+      deleteBtn.addEventListener('click', function () {
+        storyList.removeChild(storyDiv);
+        deleteStory(title, content);
+      });
+
       storyDiv.appendChild(storyTitle);
       storyDiv.appendChild(storyContent);
+      storyDiv.appendChild(deleteBtn);
 
       storyList.prepend(storyDiv);
-      form.reset();
-    });
+    }
+
+    function saveStory(title, content) {
+      const stories = JSON.parse(localStorage.getItem('stories')) || [];
+      stories.push({ title, content });
+      localStorage.setItem('stories', JSON.stringify(stories));
+    }
+
+    function deleteStory(title, content) {
+      let stories = JSON.parse(localStorage.getItem('stories')) || [];
+      stories = stories.filter(
+        story => !(story.title === title && story.content === content)
+      );
+      localStorage.setItem('stories', JSON.stringify(stories));
+    }
   </script>
 </body>
 </html>
