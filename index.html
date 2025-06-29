@@ -46,7 +46,8 @@
     }
 
     input[type="text"],
-    textarea {
+    textarea,
+    select {
       width: 100%;
       padding: 0.7rem;
       margin-top: 0.5rem;
@@ -63,6 +64,22 @@
       border: none;
       font-size: 1rem;
       cursor: pointer;
+    }
+
+    .filters {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .filters button {
+      margin: 0 5px;
+      background: #ddd;
+      color: #333;
+    }
+
+    .filters button.active {
+      background: #333;
+      color: #fff;
     }
 
     .story {
@@ -84,14 +101,32 @@
       line-height: 1.6;
     }
 
+    .tag {
+      display: inline-block;
+      background: #eee;
+      color: #555;
+      font-size: 0.85rem;
+      padding: 0.2rem 0.6rem;
+      margin-top: 0.5rem;
+      margin-right: 0.5rem;
+      border-radius: 3px;
+    }
+
+    .timestamp {
+      font-size: 0.8rem;
+      color: #999;
+      margin-top: 0.5rem;
+    }
+
     .delete-btn {
       position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: #cc0000;
+      top: 10px;
+      right: 10px;
+      background: crimson;
       color: white;
       border: none;
-      padding: 0.4rem 0.8rem;
+      padding: 4px 8px;
+      font-size: 0.8rem;
       cursor: pointer;
     }
 
@@ -114,15 +149,26 @@
       <label for="title">Story Title</label>
       <input type="text" id="title" name="title" required placeholder="e.g. A Night in Lagos" />
 
+      <label for="tag">Tag</label>
+      <select id="tag" name="tag" required>
+        <option value="">Select tag</option>
+        <option value="Fiction">Fiction</option>
+        <option value="Truth">Truth</option>
+      </select>
+
       <label for="content">Story</label>
       <textarea id="content" name="content" rows="6" required placeholder="Write your story here..."></textarea>
 
       <button type="submit">Submit Story</button>
     </form>
 
-    <div id="storyList">
-      <!-- Stories will appear here -->
+    <div class="filters">
+      <button data-filter="All" class="active">All</button>
+      <button data-filter="Fiction">Fiction</button>
+      <button data-filter="Truth">Truth</button>
     </div>
+
+    <div id="storyList"></div>
   </main>
 
   <footer>
@@ -132,64 +178,86 @@
   <script>
     const form = document.getElementById('storyForm');
     const storyList = document.getElementById('storyList');
+    const filterButtons = document.querySelectorAll('.filters button');
 
-    // Load saved stories on page load
-    window.onload = function () {
-      const savedStories = JSON.parse(localStorage.getItem('stories')) || [];
-      savedStories.forEach(story => addStoryToPage(story.title, story.content));
-    };
+    let stories = JSON.parse(localStorage.getItem('stories')) || [];
 
-    form.addEventListener('submit', function (event) {
+    function timeAgo(timestamp) {
+      const diff = Math.floor((Date.now() - timestamp) / 60000);
+      if (diff < 1) return "Posted just now";
+      if (diff === 1) return "Posted 1 minute ago";
+      return `Posted ${diff} minutes ago`;
+    }
+
+    function renderStories(filter = "All") {
+      storyList.innerHTML = '';
+      const filtered = filter === "All" ? stories : stories.filter(story => story.tag === filter);
+      filtered.forEach((story, index) => {
+        const storyDiv = document.createElement('div');
+        storyDiv.className = 'story';
+
+        const storyTitle = document.createElement('h2');
+        storyTitle.textContent = story.title;
+
+        const storyContent = document.createElement('p');
+        storyContent.textContent = story.content;
+
+        const tagSpan = document.createElement('span');
+        tagSpan.className = 'tag';
+        tagSpan.textContent = story.tag;
+
+        const timeSpan = document.createElement('div');
+        timeSpan.className = 'timestamp';
+        timeSpan.textContent = timeAgo(story.time);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.addEventListener('click', () => {
+          stories.splice(index, 1);
+          localStorage.setItem('stories', JSON.stringify(stories));
+          renderStories(filter);
+        });
+
+        storyDiv.appendChild(deleteBtn);
+        storyDiv.appendChild(storyTitle);
+        storyDiv.appendChild(storyContent);
+        storyDiv.appendChild(tagSpan);
+        storyDiv.appendChild(timeSpan);
+        storyList.appendChild(storyDiv);
+      });
+    }
+
+    form.addEventListener('submit', function(event) {
       event.preventDefault();
 
       const title = document.getElementById('title').value;
       const content = document.getElementById('content').value;
+      const tag = document.getElementById('tag').value;
 
-      addStoryToPage(title, content);
-      saveStory(title, content);
+      const newStory = {
+        title,
+        content,
+        tag,
+        time: Date.now()
+      };
+
+      stories.unshift(newStory);
+      localStorage.setItem('stories', JSON.stringify(stories));
 
       form.reset();
+      renderStories();
     });
 
-    function addStoryToPage(title, content) {
-      const storyDiv = document.createElement('div');
-      storyDiv.className = 'story';
-
-      const storyTitle = document.createElement('h2');
-      storyTitle.textContent = title;
-
-      const storyContent = document.createElement('p');
-      storyContent.textContent = content;
-
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'delete-btn';
-      deleteBtn.textContent = 'Delete';
-
-      deleteBtn.addEventListener('click', function () {
-        storyList.removeChild(storyDiv);
-        deleteStory(title, content);
+    filterButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        filterButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        renderStories(button.dataset.filter);
       });
+    });
 
-      storyDiv.appendChild(storyTitle);
-      storyDiv.appendChild(storyContent);
-      storyDiv.appendChild(deleteBtn);
-
-      storyList.prepend(storyDiv);
-    }
-
-    function saveStory(title, content) {
-      const stories = JSON.parse(localStorage.getItem('stories')) || [];
-      stories.push({ title, content });
-      localStorage.setItem('stories', JSON.stringify(stories));
-    }
-
-    function deleteStory(title, content) {
-      let stories = JSON.parse(localStorage.getItem('stories')) || [];
-      stories = stories.filter(
-        story => !(story.title === title && story.content === content)
-      );
-      localStorage.setItem('stories', JSON.stringify(stories));
-    }
+    renderStories();
   </script>
 </body>
 </html>
